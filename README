@@ -1,27 +1,36 @@
-This file gives an overview of how to setup NGRT4N.
+RealOpInsight and the related software are released under the terms of GPLv3 License.
+Prior to the installation, you may need to read the license offer. See the COPYING file. 
+ 
 
-First, It's important to note that NGRT4N is released under the terms 
-the GPL License (version 3). Prior to the installation, you may need 
-to read the LICENSE file. 
+INSTALLING REALOPINSIGHT
+-------------
+* This component needs to be installed on the workstations where users operate
 
-REQUIREMENTS
-Build Dependencies
- - g++
- - Qt >= 4.6.3. qmake and at least the following modules must be installed
-   * QtCore
-   * QtGui
-   * QtSvg
-   * QtWebKit
-   * QtXml
-
-Runtime Librairies
+* Dependencies
+ - gcc-c++ >= 4.6.3
+ - Qt >= 4.6.3 (required modules : QtCore, QtGui, QtSvg, QtWebKit, QtXml, QtScript)
+ - libzmq (librairies and development files)
  - graphviz
  
-INSTALLATION
-  $ tar zxf ngrt4n-X.Y.Y.tar.gz  # when X.Y.Z refers to the version
-  $ cd ngrt4n-X.Y
-  $ sudo ./install.sh
+* Installation
+  $ tar zxf RealOpInsightX.Y.Y.tar.gz  # X.Y.Z refers to the version
+  $ cd RealOpInsight-X.Y.Z
+  $ sudo ./install-sh
   
-When the installation is completed, check the documentation located in the 
-"doc" directory for further processing. A fresh version of this documentation 
-with lastest updates is also available online (http://ngrt4n.com).
+
+INSTALLING THE DAEMON SERVICE FOR NAGIOS (ngrt4nd)
+---------------
+* This component needs to be installed on the Nagios server.
+
+* Dependencies
+ - gcc-c++ >= 4.6.3
+ - make
+ - libzmq (librairies and development files)
+
+* Installation
+  $ tar zxf ngrt4n-d4n-X.Y.Y.tar.gz  # X.Y.Z refers to the version
+  $ cd ngrt4n-d4n-X.Y.Z
+  $ sudo ./install-sh
+
+
+After the installation, check the online documentation for further processing (http://ngrt4n.com or http://RealOpInsight.com).
