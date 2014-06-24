@@ -2,24 +2,8 @@ RealOpInsight and the related software are released under the terms of GPLv3 Lic
 Prior to the installation, you may need to read the license offer. See the COPYING file. 
  
 
-INSTALLING REALOPINSIGHT
+INSTALLATTION
 -------------
-* This component needs to be installed on the workstations where users operate
-
-* Dependencies
- - gcc-c++ >= 4.6.3
- - Qt >= 4.6.3 (required modules : QtCore, QtGui, QtSvg, QtWebKit, QtXml, QtScript)
- - libzmq (librairies and development files)
- - graphviz
- 
-* Installation
-  $ tar zxf RealOpInsightX.Y.Y.tar.gz  # X.Y.Z refers to the version
-  $ cd RealOpInsight-X.Y.Z
-  $ sudo ./install-sh
-  
-
-INSTALLING THE DAEMON SERVICE FOR NAGIOS (ngrt4nd)
----------------
 * This component needs to be installed on the Nagios server.
 
 * Dependencies
