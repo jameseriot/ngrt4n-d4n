@@ -24,4 +24,4 @@ Installation
 
 
 After the installation, check the online documentation for further 
-processing (http://RealOpInsight.com).
+processing (http://docs.realopinsight.com).
