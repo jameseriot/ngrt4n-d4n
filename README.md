@@ -15,9 +15,12 @@ Dependencies
 
 Installation
 ==
+
+```
   $ tar zxf ngrt4n-d4n-X.Y.Y.tar.gz  # X.Y.Z refers to the version
   $ cd ngrt4n-d4n-X.Y.Z
   $ sudo ./install-sh
+```
 
 
 After the installation, check the online documentation for further 
