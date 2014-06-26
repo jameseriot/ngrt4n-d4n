@@ -5,13 +5,13 @@ Prior to the installation, you may need to read the license offer.
 
 INSTALLATTION
 =
-* This component needs to be installed on the Nagios server.
+This component needs to be installed on the Nagios server.
 
 Dependencies
 ==
- - gcc-c++ >= 4.6.3
- - make
- - libzmq (librairies and development files)
+- gcc-c++ >= 4.6.3
+- make
+- libzmq (librairies and development files)
 
 Installation
 ==
