@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT([NGRT4N Daemon for Nagios], [1.1.1], [Rodrigue Chakode <rodrigue.chakode@ngrt4n.com>], [ngrt4n-d4n], [http://RealOpInsight.com])
+AC_INIT([ngrt4nd], [1.2.0], [Rodrigue Chakode <rodrigue.chakode@realopinsight.com>], [ngrt4n-d4n], [http://RealOpInsight.com])
 #AM_INIT_AUTOMAKE([dm], [1.0])
 AM_INIT_AUTOMAKE
 

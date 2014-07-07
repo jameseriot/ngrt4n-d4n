@@ -42,13 +42,6 @@ void ngrt4n::initApp()
 }
 
 
-void ngrt4n::checkUser() {
-  if( getuid() != 0) {
-      std::cerr << "The program must be run as root !\n";
-      exit(1) ;
-    }
-}
-
 std::string ngrt4n::trim(const std::string& str, const std::string& enclosingChar)
 {
   size_t first = str.find_first_not_of(enclosingChar);
