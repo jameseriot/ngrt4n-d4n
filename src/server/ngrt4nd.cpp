@@ -55,7 +55,7 @@ std::string authChain= "";
  * @return nothing
  */
 void
-redirectRequestToLivestatus(std::string input, std::string& output)
+requestFromLivestatus(std::string input, std::string& output)
 {
   const int BUFFER_UNIT_SIZE = 1024;
   const int RESULT_BUFFER_SIZE = 2 * 1024 * 1024;
@@ -262,29 +262,29 @@ int main(int argc, char ** argv)
 
   MonitorBroker monitor(statusFile);
   while (true) {
-    std::string recvMsg = socket.recv();
-    std::string response;
-    if(recvMsg == "PING") {
-      response = "ALIVE:"+packageVersion;
+    std::string recvData = socket.recv();
+    std::string result;
+    if(recvData == "PING") {
+      result = "ALIVE:"+packageVersion;
     } else {
-      size_t pos = recvMsg.find(":");
+      size_t pos = recvData.find(":");
       std::string authToken = "";
       std::string data = "";
       if(pos != std::string::npos) {
-        authToken = recvMsg.substr(0, pos);
-        data = recvMsg.substr(pos+1, std::string::npos);
+        authToken = recvData.substr(0, pos);
+        data = recvData.substr(pos+1, std::string::npos);
       }
       if(authToken == authChain) {
         if (! useLivestatus) {
-          response = monitor.getInfOfService(data);
+          result = monitor.getInfOfService(data);
         } else {
-          redirectRequestToLivestatus(data, response);
+          requestFromLivestatus(data, result);
         }
       } else {
-        response = "{\"return_code\" : \"-2\", \"message\" : \"Authentication failed\"}";
+        result = "{\"return_code\" : \"-2\", \"message\" : \"authentication failed\"}";
       }
     }
-    socket.send(response);
+    socket.send(result);
   }
   return 0;
 }
