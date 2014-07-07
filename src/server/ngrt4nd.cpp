@@ -80,6 +80,10 @@ redirectRequestToLivestatus(std::string input, std::string& output)
   output = std::string(resultBuffer);
 }
 
+/**
+ * @brief Print help
+ * @return
+ */
 std::string help() {
   std::ostringstream msg("SYNOPSIS\n"
                          "	" + progName +" [OPTIONS]\n"
@@ -114,6 +118,11 @@ std::string help() {
   return msg.str();
 }
 
+/**
+ * @brief Print version info and copyright info
+ * @param progName The name of the program
+ * @return
+ */
 std::string getVersionMsg(const std::string& progName)
 {
   char msg[1024];
@@ -125,6 +134,10 @@ std::string getVersionMsg(const std::string& progName)
   return std::string(msg);
 }
 
+/**
+ * @brief Set the auth chain
+ * @param authChain
+ */
 void ngrt4n::setPassChain(char* authChain)
 {
   std::ofstream ofpass;
@@ -137,6 +150,11 @@ void ngrt4n::setPassChain(char* authChain)
   ofpass.close();
 }
 
+
+/**
+ * @brief Get the auth chain
+ * @return
+ */
 std::string ngrt4n::getPassChain()
 {
   std::string authChain;
@@ -152,6 +170,13 @@ std::string ngrt4n::getPassChain()
   return authChain;
 }
 
+
+/**
+ * @brief main
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main(int argc, char ** argv)
 {
   progName = basename(argv[0]);
