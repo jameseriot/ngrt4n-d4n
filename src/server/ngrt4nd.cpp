@@ -128,7 +128,7 @@ std::string getVersionMsg(const std::string& progName)
   char msg[1024];
   sprintf(msg, "> %s %s"
           "\n>> Copyright (c) 2010-2014 RealOpInsight Labs. All rights reserved"
-          "\n>> License GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>"
+          "\n>> Licensed under GNU GPLv3 <http://gnu.org/licenses/gpl.html>"
           "\n>> For bug report, see: <%s>",
           progName.c_str(), packageVersion.c_str(), packageUrl.c_str());
   return std::string(msg);
