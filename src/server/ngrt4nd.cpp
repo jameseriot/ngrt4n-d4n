@@ -43,163 +43,248 @@ std::string packageName = PACKAGE_NAME;
 std::string packageVersion = PACKAGE_VERSION;
 std::string packageUrl = PACKAGE_URL;
 std::string statusFile = "/usr/local/nagios/var/status.dat";
+std::string unixcatPath = "unixcat";
+std::string livestatusSocket = "/var/lib/nagios/rw/live";
 std::string progName = "";
 std::string authChain= "";
 
+/**
+ * @brief Redirect a message to Livestatus socket and get output
+ * @param command The command
+ * @param msg The standard output/error message
+ * @return nothing
+ */
+void
+requestFromLivestatus(std::string input, std::string& output)
+{
+  const int BUFFER_UNIT_SIZE = 1024;
+  const int RESULT_BUFFER_SIZE = 2 * 1024 * 1024;
+
+  char command[BUFFER_UNIT_SIZE];
+  sprintf(command, "echo %s | %s %s", input.c_str(), unixcatPath.c_str(), livestatusSocket.c_str());
+
+  FILE* pipe = popen(command, "r");
+  char resultBuffer[RESULT_BUFFER_SIZE];
+  if (! pipe) {
+    sprintf(resultBuffer, "{\"return_code\" : \"-1\", \"message\" : \"Error running command %s\"}", command);
+  } else {
+    char readBuffer[BUFFER_UNIT_SIZE];
+    while(! feof(pipe)) {
+      if(fgets(readBuffer, BUFFER_UNIT_SIZE, pipe) != NULL) {
+        output += readBuffer;
+      }
+    }
+    sprintf(resultBuffer, "{\"return_code\" : \"0\", \"message\" : \"%s\"}", output.c_str());
+    pclose(pipe);
+  }
+  output = std::string(resultBuffer);
+}
+
+/**
+ * @brief Print help
+ * @return
+ */
 std::string help() {
   std::ostringstream msg("SYNOPSIS\n"
                          "	" + progName +" [OPTIONS]\n"
                          "\n"
+                         "DESCRIPTION\n"
+                         "   Service to retrieve status data from a Nagios-like monitoting system.\n"
+                         "   By default the service relies on Nagios status.dat to serve monitoring.\n"
+                         "   But altervatively, it can also work as a network-broker to enable\n"
+                         "   remote access to Livestatus over network."
+                         "\n"
                          "OPTIONS\n"
-                         "	-c FILE\n"
-                         "	 Specify the path of the Nagios status file. Default is " + statusFile + ".\n"
-                         "	-D\n"
-                         "	 Run the program in foreground mode. \n"
                          "	-p\n"
                          "	 Set the listening port. Default is 1983.\n"
+                         "	-l\n"
+                         "	 Start the service as Livestatus broker.The default mode relies on status.dat\n"
+                         "	-c FILE\n"
+                         "	 If using Livestatus mode. Set the path to the Nagios status file. Default is " + statusFile + ".\n"
+                         "	-D\n"
+                         "	 Run the program in foreground mode.\n"
                          "	-P\n"
                          "	 Change the authentication token.\n"
                          "	-T\n"
                          "	 Print the authentication token.\n"
+                         "	-s\n"
+                         "	 Set the path to Livestatus socket. Default is "+livestatusSocket+"\n"
+                         "	-u\n"
+                         "	 Set the path to MK Livestatus unixcat utility. Find in PATH by default\n"
                          "	-v\n"
                          "	 Print the version and copyright information.\n"
                          "	-h\n"
-                         "	 Print this help.\n\n");
+                         "	 Print this help.\n");
   return msg.str();
 }
 
+/**
+ * @brief Print version info and copyright info
+ * @param progName The name of the program
+ * @return
+ */
 std::string getVersionMsg(const std::string& progName)
 {
   char msg[1024];
-  sprintf(msg, "> %s (%s) version %s"
-          "\n>> Belongs to NGRT4N Dashboard Monitoring Suite"
-          "\n>> Copyright (c) 2010-2013 NGRT4N Project. All rights reserved"
-          "\n>> License GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>"
-          "\n>> For bug reporting instructions, see: <%s>",
-          packageName.c_str(), progName.c_str(), packageVersion.c_str(), packageUrl.c_str());
+  sprintf(msg, "> %s %s"
+          "\n>> Copyright (c) 2010-2014 RealOpInsight Labs. All rights reserved"
+          "\n>> Licensed under GNU GPLv3 <http://gnu.org/licenses/gpl.html>"
+          "\n>> For bug report, see: <%s>",
+          progName.c_str(), packageVersion.c_str(), packageUrl.c_str());
   return std::string(msg);
 }
 
+/**
+ * @brief Set the auth chain
+ * @param authChain
+ */
 void ngrt4n::setPassChain(char* authChain)
 {
   std::ofstream ofpass;
   ofpass.open(ngrt4n::AUTH_FILE.c_str());
   if(!ofpass.good()) {
-      std::clog << "Unable to set the authentication token." << "\n";
-      exit(1);
-    }
+    std::clog << "Unable to set the authentication token." << "\n";
+    exit(1);
+  }
   ofpass << crypt(authChain, salt.c_str());
   ofpass.close();
 }
 
+
+/**
+ * @brief Get the auth chain
+ * @return
+ */
 std::string ngrt4n::getPassChain()
 {
   std::string authChain;
   std::ifstream pfile;
   pfile.open (ngrt4n::AUTH_FILE.c_str());
   if(!pfile.good()) {
-      std::clog << "Unable to load the application's settings" << "\n";
-      exit(1);
-    }
+    std::clog << "Unable to load the application's settings" << "\n";
+    exit(1);
+  }
 
   pfile >> authChain;
   pfile.close();
   return authChain;
 }
 
+
+/**
+ * @brief main
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main(int argc, char ** argv)
 {
   progName = basename(argv[0]);
   int port = MonitorBroker::DefaultPort;
   bool foreground = false;
+  bool useLivestatus = false;
   char opt;
-  static const char *shotOpt="DTPhvc:p:";
+  char* pass = NULL;
+  static const char *shotOpt="DTPhvls:u:c:p:";
   while ((opt = getopt(argc, argv, shotOpt)) != -1) {
-      switch (opt){
-        case 'D':
-          foreground = true;
-          break;
-        case 'c':
-          statusFile = optarg;
-          break;
-        case 'p':
-          port = atoi(optarg);
-          if(port <= 0 ) {
-              std::cerr << "Bad port number\n";
-              exit(1);
-            }
-          break;
-        case 'P':
-          {
-            ngrt4n::checkUser();
-            ngrt4n::initApp();
-            char* pass = getpass("Type a passphrase:");
-            ngrt4n::setPassChain(pass);
-            std::cout << ngrt4n::getPassChain()<<"\n";
-            exit(0);
-          }
-        case 'T':
-          ngrt4n::checkUser();
-          std::cout << ngrt4n::getPassChain()<<"\n";
-          exit(0);
-        case 'v':
-          std::cout << getVersionMsg(progName)<<"\n";
-          exit(0);
-        case 'h':
-          std::cout << help();
-          exit(0);
-        default:
-          std::cout << help();
+    switch (opt){
+      case 'D':
+        foreground = true;
+        break;
+      case 'l':
+        useLivestatus = true;
+        break;
+      case 's':
+        livestatusSocket = optarg;
+        break;
+      case 'u':
+        unixcatPath = optarg;
+        break;
+      case 'c':
+        statusFile = optarg;
+        break;
+      case 'p':
+        port = atoi(optarg);
+        if(port <= 0 ) {
+          std::cerr << "Bad port number\n";
           exit(1);
         }
+        break;
+      case 'P':
+        ngrt4n::initApp();
+        pass = getpass("Type a passphrase:");
+        ngrt4n::setPassChain(pass);
+        std::cout << ngrt4n::getPassChain()<<"\n";
+        exit(0);
+      case 'T':
+        std::cout << ngrt4n::getPassChain()<<"\n";
+        exit(0);
+      case 'v':
+        std::cout << getVersionMsg(progName)<<"\n";
+        exit(0);
+      case 'h':
+        std::cout << help();
+        exit(0);
+      default:
+        std::cout << help();
+        exit(1);
     }
-  ngrt4n::checkUser();
+  }
   ngrt4n::initApp();
   authChain = ngrt4n::getPassChain();
-  std::clog << getVersionMsg(progName)<< "\nStarting...\n";
+  std::clog << getVersionMsg(progName)<<"\n";
+
   if(!foreground) {
-      pid_t pid = fork();
-      if(pid <= -1) {
-          std::clog << "Failed while starting the daemon service\n";
-          exit(1);
-        } else if(pid > 0) {
-          exit (0);
-        }
-      setsid();
+    pid_t pid = fork();
+    if(pid <= -1) {
+      std::clog << "Failed while starting the daemon service\n";
+      exit(1);
+    } else if(pid > 0) {
+      exit (0);
     }
+    setsid();
+  }
 
   std::ostringstream uri;
   uri << "tcp://0.0.0.0:" << port;
   ZmqSocket socket(ZMQ_REP);
   if(!socket.bind(uri.str())) {
-      std::clog << "ERROR\n";exit(1);
-    }
-  std::clog << "Listening address => "<<uri.str()
-            << "\nNagios status file => "<<statusFile
-            << "\n============>started\n";
+    std::clog << "ERROR\n";exit(1);
+  }
 
-  auto monitor = std::unique_ptr<MonitorBroker>(new MonitorBroker(statusFile));
+  std::clog << " == Binding address => "<<uri.str()<<"\n";
+  if (useLivestatus) {
+    std::clog << " == Using Livestatus socket => " << livestatusSocket <<"\n";
+  } else {
+    std::clog << " == Using Status dat file => " << statusFile <<"\n";
+  }
+  std::clog << " == Server started\n";
+
+  MonitorBroker monitor(statusFile);
   while (true) {
-      std::string msg = socket.recv();
-      std::string reply;
-      if(msg == "PING") {
-          reply = "ALIVE:"+packageVersion;
+    std::string recvData = socket.recv();
+    std::string result;
+    if(recvData == "PING") {
+      result = "ALIVE:"+packageVersion;
+    } else {
+      size_t pos = recvData.find(":");
+      std::string authToken = "";
+      std::string data = "";
+      if(pos != std::string::npos) {
+        authToken = recvData.substr(0, pos);
+        data = recvData.substr(pos+1, std::string::npos);
+      }
+      if(authToken == authChain) {
+        if (! useLivestatus) {
+          result = monitor.getInfOfService(data);
         } else {
-          size_t pos = msg.find(":");
-          std::string pass = "";
-          std::string sid = "";
-          if(pos != std::string::npos) {
-              pass = msg.substr(0, pos);
-              sid = msg.substr(pos+1, std::string::npos);
-            }
-          if(pass == authChain) {
-              reply = monitor->getInfOfService(sid);
-            } else {
-              reply = "{\"return_code\" : \"-2\", \"message\" : \"Authentication failed\"}";
-            }
+          requestFromLivestatus(data, result);
         }
-      socket.send(reply);
+      } else {
+        result = "{\"return_code\" : \"-2\", \"message\" : \"authentication failed\"}";
+      }
     }
-  monitor.reset(NULL);
+    socket.send(result);
+  }
   return 0;
 }

@@ -35,8 +35,7 @@ namespace ngrt4n {
   const std::string AUTH_FILE =  APP_HOME + "/auth" ;
   const std::string salt = "$1$" + APP_NAME + "$";
 
-  void initApp() ;
-  void checkUser() ;
+  void initApp();
   void setPassChain(char* authChain) ;
   std::string getPassChain() ;
   std::string trim(const std::string& str, const std::string& enclosingChar=" \t");
