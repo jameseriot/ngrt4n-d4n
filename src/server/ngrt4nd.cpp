@@ -61,12 +61,18 @@ requestFromLivestatus(std::string input, std::string& output)
   const int RESULT_BUFFER_SIZE = 2 * 1024 * 1024;
 
   char command[BUFFER_UNIT_SIZE];
-  sprintf(command, "echo %s | %s %s", input.c_str(), unixcatPath.c_str(), livestatusSocket.c_str());
+  sprintf(command, 
+          "echo \"%s\" | %s %s", 
+          input.c_str(), 
+          unixcatPath.c_str(), 
+          livestatusSocket.c_str());
 
   FILE* pipe = popen(command, "r");
   char resultBuffer[RESULT_BUFFER_SIZE];
   if (! pipe) {
-    sprintf(resultBuffer, "{\"return_code\" : \"-1\", \"message\" : \"Error running command %s\"}", command);
+    sprintf(resultBuffer, 
+            "{\"return_code\" : \"-1\", \"message\" : \"Error running command %s\"}", 
+            command);
   } else {
     char readBuffer[BUFFER_UNIT_SIZE];
     while(! feof(pipe)) {
